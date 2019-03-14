@@ -1,0 +1,23 @@
+{
+  "src/lib/components/DashLeaflet.react.js": {
+    "description": "DashLeaflet is allows to display a map in dash. Several point and line layers can be added to the map.",
+    "displayName": "DashLeaflet",
+    "methods": [],
+    "props": {
+      "id": {
+        "type": {
+          "name": "string"
+        },
+        "required": false,
+        "description": ""
+      },
+      "label": {
+        "type": {
+          "name": "string"
+        },
+        "required": false,
+        "description": ""
+      }
+    }
+  }
+}
