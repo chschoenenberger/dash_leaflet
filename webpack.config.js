@@ -40,6 +40,8 @@ module.exports = (env, argv) => {
         react: 'React',
         'react-dom': 'ReactDOM',
         'plotly.js': 'Plotly',
+        'react-leaflet': 'ReactLeaflet',
+        'leaflet': 'Leaflet'
     });
 
     return {
