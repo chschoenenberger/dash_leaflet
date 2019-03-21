@@ -21,7 +21,8 @@
     "file-loader": "^3.0.1",
     "leaflet": "^1.4.0",
     "ramda": "^0.25.0",
-    "react-leaflet": "^2.2.1"
+    "react-leaflet": "^2.2.1",
+    "prop-types": "latest"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
