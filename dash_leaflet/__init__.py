@@ -31,7 +31,7 @@ _this_module = _sys.modules[__name__]
 
 _js_dist = [
     {
-        'relative_package_path': 'assets/react-leaflet.js',
+        'relative_package_path': 'react-leaflet.js',
         'namespace': package_name
     },
     {
@@ -42,12 +42,7 @@ _js_dist = [
     },
 ]
 
-_css_dist = [
-    {
-        'relative_package_path': 'assets/leaflet.css',
-        'namespace': package_name
-    },
-]
+_css_dist = []
 
 
 for _component in __all__:
