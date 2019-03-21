@@ -31,7 +31,7 @@ _this_module = _sys.modules[__name__]
 
 _js_dist = [
     {
-        'relative_package_path': 'react-leaflet.js',
+        'relative_package_path': 'assets/react-leaflet.js',
         'namespace': package_name
     },
     {
