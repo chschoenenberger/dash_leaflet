@@ -14,6 +14,12 @@ export default class DashLeaflet extends Component<{}, State> {
         if (this.props.style['height'] === '100%') {
             this.props.style['height'] = '600px'
         }
+        ;
+
+        this.state = {
+            line_layer: [],
+            point_layer: [],
+        };
     }
 
     /**
@@ -30,7 +36,7 @@ export default class DashLeaflet extends Component<{}, State> {
             />);
             return baselayer;
 
-        // If there is a single baselayer provided, create Tilelayer and return it
+            // If there is a single baselayer provided, create Tilelayer and return it
         } else if (!Array.isArray(this.props.baselayer) || this.props.baselayer.length === 1) {
             let lyr = (this.props.baselayer.length === 1) ? this.props.baselayer[0] : this.props.baselayer;
             let baselayer = (<ReactLeaflet.TileLayer
@@ -39,8 +45,8 @@ export default class DashLeaflet extends Component<{}, State> {
             />);
             return baselayer;
 
-        // If there are multiple baselayers provided in an array, loop over them and return the baselayers in a layer
-        // control element.
+            // If there are multiple baselayers provided in an array, loop over them and return the baselayers in a layer
+            // control element.
         } else {
             let baselayers = [];
             for (let i = 0; i < this.props.baselayer.length; i++) {
@@ -72,15 +78,18 @@ export default class DashLeaflet extends Component<{}, State> {
             let layer_list = [];
             for (let j = 0; j < layers.length; j++) {
                 let line = (<ReactLeaflet.Polyline key={"line" + i + "_" + j} color="black" weight={2}
-                                                   positions={layers[j].getLatLngs()}/>);
+                                                   positions={layers[j].getLatLngs()}>
+                    <ReactLeaflet.Popup>
+                        A pretty CSS3 popup. <br/> Easily customizable.
+                    </ReactLeaflet.Popup>
+                </ReactLeaflet.Polyline>);
                 layer_list.push(line);
             }
-            let line_group = (
-                <ReactLeaflet.LayersControl.Overlay checked name={titles[i]} key={"line_layer" + i}>
-                    <ReactLeaflet.FeatureGroup>
-                        {layer_list}
-                    </ReactLeaflet.FeatureGroup>
-                </ReactLeaflet.LayersControl.Overlay>);
+            let line_group = (<ReactLeaflet.LayersControl.Overlay checked name={titles[i]} key={"line_layer" + i}>
+                <ReactLeaflet.FeatureGroup>
+                    {layer_list}
+                </ReactLeaflet.FeatureGroup>
+            </ReactLeaflet.LayersControl.Overlay>);
             line_groups.push(line_group);
         }
         return line_groups
@@ -101,7 +110,9 @@ export default class DashLeaflet extends Component<{}, State> {
             for (let j = 0; j < layers.length; j++) {
                 let point = (
                     <ReactLeaflet.CircleMarker key={"point" + i + "_" + j} center={layers[j].getLatLng()} color="red"
-                                               radius={0.5}/>);
+                                               radius={2}>
+                        <ReactLeaflet.Popup>This is some fucking bullshit -.-</ReactLeaflet.Popup>
+                    </ReactLeaflet.CircleMarker>);
                 layer_list.push(point);
             }
             let point_group = (
@@ -115,11 +126,18 @@ export default class DashLeaflet extends Component<{}, State> {
         return point_groups
     }
 
+    componentDidMount() {
+        this.setState({
+            line_layer: this.loadLines(this.props.lines.geom, this.props.lines.titles),
+            point_layer: this.loadPoints(this.props.points.geom, this.props.points.titles)
+        })
+    }
+
     render() {
         let mapOptions = this.props.mapOptions;
 
-        let line_data = this.props.lines;
-        let point_data = this.props.points;
+        let line_data = this.loadLines(this.props.lines.geom, this.props.lines.titles);
+        let point_data = this.loadPoints(this.props.points.geom, this.props.points.titles);
 
         return (
             <div id={this.props.id} style={this.props.style}>
@@ -135,8 +153,8 @@ export default class DashLeaflet extends Component<{}, State> {
                 >
                     <ReactLeaflet.LayersControl position='topright'>
                         {this.getBaseLayers()}
-                        {this.loadLines(line_data.geom, line_data.titles)}
-                        {this.loadPoints(point_data.geom, point_data.titles)}
+                        {this.state.line_layer}
+                        {this.state.point_layer}
                     </ReactLeaflet.LayersControl>
                 </ReactLeaflet.Map>
             </div>

@@ -28,7 +28,6 @@ _current_path = _os.path.dirname(_os.path.abspath(__file__))
 
 _this_module = _sys.modules[__name__]
 
-
 _js_dist = [
     {
         'relative_package_path': 'assets/react-leaflet.js',
@@ -37,14 +36,18 @@ _js_dist = [
     {
         'relative_package_path': 'dash_leaflet.min.js',
         'dev_package_path': 'dash_leaflet.dev.js',
-        
+
         'namespace': package_name
     },
 ]
 
-_css_dist = []
-
+_css_dist = [
+    {
+        'relative_package_path': 'assets/leaflet.css',
+        'namespace': package_name
+    }
+]
 
 for _component in __all__:
-    setattr(locals()[_component], '_js_dist', _js_dist)
     setattr(locals()[_component], '_css_dist', _css_dist)
+    setattr(locals()[_component], '_js_dist', _js_dist)
