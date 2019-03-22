@@ -26,16 +26,16 @@ Those keys have the following types:
 Those keys have the following types: 
   - url (string; optional)
   - attribution (string; optional) | list
-- lines (list; optional): Object containing
+- lines (list; optional): Array containing one or many shapes of:
      - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
      - title: Title of line layers that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the lines.
-- points (list; optional): Object containing
+- points (list; optional): Array containing one or many shapes of:
      - geom: GeoJSON object containing points that are to be rendered on the map.
      - title: Title of point layer that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the points.
      - source: Source of the icon that is to be rendered for the points. Attention, this must be an
-               external link and cannot be a relative link.
+     external link and cannot be a relative link.
 
 Available events: """
     @_explicitize_args

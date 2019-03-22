@@ -17,6 +17,7 @@ export default class DashLeaflet extends Component<{}, State> {
         this.state = {
             line_layer: [],
             point_layer: [],
+
         };
     }
 
@@ -125,7 +126,7 @@ export default class DashLeaflet extends Component<{}, State> {
             for (let j = 0; j < layers.length; j++) {
                 let point = (
                     <ReactLeaflet.Marker key={"point" + i + "_" + j} position={layers[j].getLatLng()}
-                                         icon={this.getIcon(points[i].source)}>
+                                         icon={DashLeaflet.getIcon(points[i].source)}>
                         <ReactLeaflet.Popup>
                             <div>
                                 {points[i].title}: <br/>{layers[j].feature.properties[points[i].popup]}
@@ -148,8 +149,22 @@ export default class DashLeaflet extends Component<{}, State> {
     render() {
         let mapOptions = this.props.mapOptions;
 
-        let line_data = DashLeaflet.loadLines(this.props.lines);
-        let point_data = DashLeaflet.loadPoints(this.props.points);
+        let layers;
+        // Only show layer control when there are point/line layers or multiple base layers
+        if ((!this.props.baselayer || !Array.isArray(this.props.baselayer) || this.props.baselayer.length === 1) &&
+            this.props.lines.length === 0 && this.props.points.length === 0) {
+            layers = (
+                this.getBaseLayers()
+            )
+        } else {
+            layers = (
+                <ReactLeaflet.LayersControl>
+                    {this.getBaseLayers()}
+                    {DashLeaflet.loadLines(this.props.lines)}
+                    {DashLeaflet.loadPoints(this.props.points)}
+                </ReactLeaflet.LayersControl>
+            )
+        }
 
         return (
             <div id={this.props.id} style={this.props.style}>
@@ -163,11 +178,7 @@ export default class DashLeaflet extends Component<{}, State> {
                                   maxZoom={mapOptions.maxZoom}
                                   zoom={mapOptions.zoom}
                 >
-                    <ReactLeaflet.LayersControl position='topright'>
-                        {this.getBaseLayers()}
-                        {line_data}
-                        {point_data}
-                    </ReactLeaflet.LayersControl>
+                    {layers}
                 </ReactLeaflet.Map>
             </div>
         )
@@ -217,7 +228,7 @@ DashLeaflet.propTypes = {
     ]),
 
     /**
-     Object containing
+     Array containing one or many shapes of:
      - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
      - title: Title of line layers that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the lines.
@@ -229,12 +240,12 @@ DashLeaflet.propTypes = {
     })),
 
     /**
-     Object containing
+     Array containing one or many shapes of:
      - geom: GeoJSON object containing points that are to be rendered on the map.
      - title: Title of point layer that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the points.
      - source: Source of the icon that is to be rendered for the points. Attention, this must be an
-               external link and cannot be a relative link.
+     external link and cannot be a relative link.
      */
     points: PropTypes.arrayOf(PropTypes.shape({
         geom: PropTypes.object,
@@ -250,6 +261,6 @@ DashLeaflet.defaultProps = {
         center: [0, 0],
         zoom: 4.
     },
-    lines: {'geom': [], 'titles': [], 'popup': []},
-    points: {'geom': [], 'titles': [], 'popup': []},
+    lines: [],
+    points: [],
 };
