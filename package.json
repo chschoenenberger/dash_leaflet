@@ -14,7 +14,8 @@
     "build:all": "npm run build:js && npm run build:js-dev && npm run build:py",
     "build:all-activated": "(. venv/bin/activate || venv\\scripts\\activate && npm run build:all)"
   },
-  "author": "Christoph Schoenenberger christoph.schoenenberger@zuehlke.com",
+  "author": "Christoph Schoenenberger",
+  "author_email": "christoph.schoenenberger@zuehlke.com",
   "license": "MIT",
   "dependencies": {
     "acorn": "^6.1.1",

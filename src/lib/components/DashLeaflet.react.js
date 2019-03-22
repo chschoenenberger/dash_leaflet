@@ -11,10 +11,10 @@ export default class DashLeaflet extends Component<{}, State> {
 
     constructor(props) {
         super(props);
+
         if (this.props.style['height'] === '100%') {
-            this.props.style['height'] = '600px'
+            console.warn('Attention: Map might not display, if height of element and parent are 100%.')
         }
-        ;
 
         this.state = {
             line_layer: [],
@@ -71,7 +71,7 @@ export default class DashLeaflet extends Component<{}, State> {
      * @param titles Title of each feature group that is to be displayed in the layer control
      * @returns {Array} of Layer overlays containing feature groups of provided lines
      */
-    loadLines(geom, titles) {
+    static loadLines(geom, titles, popup) {
         let line_groups = [];
         for (let i = 0; i < geom.length; i++) {
             let layers = L.geoJSON(geom[i]).getLayers();
@@ -80,7 +80,9 @@ export default class DashLeaflet extends Component<{}, State> {
                 let line = (<ReactLeaflet.Polyline key={"line" + i + "_" + j} color="black" weight={2}
                                                    positions={layers[j].getLatLngs()}>
                     <ReactLeaflet.Popup>
-                        A pretty CSS3 popup. <br/> Easily customizable.
+                        <div>
+                            {titles[i]}: {layers[j].feature.properties[popup[i]]}
+                        </div>
                     </ReactLeaflet.Popup>
                 </ReactLeaflet.Polyline>);
                 layer_list.push(line);
@@ -102,7 +104,7 @@ export default class DashLeaflet extends Component<{}, State> {
      * @param titles Title of each feature group that is to be displayed in the layer control
      * @returns {Array} of Layer overlays containing feature groups of provided points
      */
-    loadPoints(geom, titles) {
+    static loadPoints(geom, titles, popup) {
         let point_groups = [];
         for (let i = 0; i < geom.length; i++) {
             let layers = L.geoJSON(geom[i]).getLayers();
@@ -111,7 +113,11 @@ export default class DashLeaflet extends Component<{}, State> {
                 let point = (
                     <ReactLeaflet.CircleMarker key={"point" + i + "_" + j} center={layers[j].getLatLng()} color="red"
                                                radius={2}>
-                        <ReactLeaflet.Popup>This is some fucking bullshit -.-</ReactLeaflet.Popup>
+                        <ReactLeaflet.Popup>
+                            <div>
+                                {titles[i]}: {layers[j].feature.properties[popup[i]]}
+                            </div>
+                        </ReactLeaflet.Popup>
                     </ReactLeaflet.CircleMarker>);
                 layer_list.push(point);
             }
@@ -128,16 +134,16 @@ export default class DashLeaflet extends Component<{}, State> {
 
     componentDidMount() {
         this.setState({
-            line_layer: this.loadLines(this.props.lines.geom, this.props.lines.titles),
-            point_layer: this.loadPoints(this.props.points.geom, this.props.points.titles)
+            line_layer: DashLeaflet.loadLines(this.props.lines.geom, this.props.lines.titles, this.props.lines.popup),
+            point_layer: DashLeaflet.loadPoints(this.props.points.geom, this.props.points.titles, this.props.points.popup)
         })
     }
 
     render() {
         let mapOptions = this.props.mapOptions;
 
-        let line_data = this.loadLines(this.props.lines.geom, this.props.lines.titles);
-        let point_data = this.loadPoints(this.props.points.geom, this.props.points.titles);
+        let line_data = DashLeaflet.loadLines(this.props.lines.geom, this.props.lines.titles, this.props.lines.popup);
+        let point_data = DashLeaflet.loadPoints(this.props.points.geom, this.props.points.titles, this.props.points.popup);
 
         return (
             <div id={this.props.id} style={this.props.style}>
@@ -208,20 +214,24 @@ DashLeaflet.propTypes = {
      Object containing
      - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
      - titles: Array of titles of line layers that are to be rendered on the map.
+     - popup: Array of property name that is to be rendered in the popup of the line.
      */
     lines: PropTypes.shape({
         geom: PropTypes.arrayOf(PropTypes.object),
         titles: PropTypes.arrayOf(PropTypes.string),
+        popup: PropTypes.arrayOf(PropTypes.string),
     }),
 
     /**
      Object containing
      - geom: Array of GeoJSON objects containing points that are to be rendered on the map.
      - titles: Array of titles of point layers that are to be rendered on the map.
+     - popup: Array of property name that is to be rendered in the popup of the points.
      */
     points: PropTypes.shape({
         geom: PropTypes.arrayOf(PropTypes.object),
         titles: PropTypes.arrayOf(PropTypes.string),
+        popup: PropTypes.arrayOf(PropTypes.string),
     }),
 };
 
