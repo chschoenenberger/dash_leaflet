@@ -3,11 +3,8 @@ import React, {Component} from 'react';
 
 import {DashLeaflet} from '../lib';
 
-const data_l = require('./some_lines.json')
-const data_p = require('./some_points.json')
-
-const line_dat = {'geom': [data_l], 'titles': ['Some Line Title']}
-const point_dat = {'geom': [data_p], 'titles': ['Some Point Title']}
+const data_l = require('./data/sbb_network.json')
+const data_p = require('./data/haltestellen_zug.json')
 
 class App extends Component {
 
@@ -29,6 +26,7 @@ class App extends Component {
                         bounds: [[47.82, 10.50], [45.80, 5.93]],
                         maxBounds: [[47.82, 10.50], [45.80, 5.93]]
                     }}
+                    style={{height: '100%'}}
                     baselayer={[
                         {
                             name: 'Light',
@@ -36,12 +34,26 @@ class App extends Component {
                             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         },
                         {
-                            name: 'Satellit',
+                            name: 'Satellite',
                             url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                         },
                     ]}
-                    lines={line_dat}
+                    points={[
+                        {
+                            geom: data_p,
+                            title: 'SBB Haltestellen',
+                            popup: 'name',
+                            source: 'https://appstickers-cdn.appadvice.com/1193200134/821557143/09f5bff947642901256be8f4e7478fd2-8.png'
+                        }
+                    ]}
+                    lines={[
+                        {
+                            geom: data_l,
+                            title: 'SBB Linien',
+                            popup: 'Name',
+                        }
+                    ]}
                 />
             </div>
         )

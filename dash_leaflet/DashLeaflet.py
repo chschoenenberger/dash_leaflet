@@ -26,22 +26,16 @@ Those keys have the following types:
 Those keys have the following types: 
   - url (string; optional)
   - attribution (string; optional) | list
-- lines (optional): Object containing
+- lines (list; optional): Object containing
      - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
-     - titles: Array of titles of line layers that are to be rendered on the map.
-     - popup: Array of property name that is to be rendered in the popup of the line.. lines has the following type: dict containing keys 'geom', 'titles', 'popup'.
-Those keys have the following types: 
-  - geom (list; optional)
-  - titles (list; optional)
-  - popup (list; optional)
-- points (optional): Object containing
-     - geom: Array of GeoJSON objects containing points that are to be rendered on the map.
-     - titles: Array of titles of point layers that are to be rendered on the map.
-     - popup: Array of property name that is to be rendered in the popup of the points.. points has the following type: dict containing keys 'geom', 'titles', 'popup'.
-Those keys have the following types: 
-  - geom (list; optional)
-  - titles (list; optional)
-  - popup (list; optional)
+     - title: Title of line layers that are to be rendered on the map.
+     - popup: Property name that is to be rendered in the popup of the lines.
+- points (list; optional): Object containing
+     - geom: GeoJSON object containing points that are to be rendered on the map.
+     - title: Title of point layer that are to be rendered on the map.
+     - popup: Property name that is to be rendered in the popup of the points.
+     - source: Source of the icon that is to be rendered for the points. Attention, this must be an
+               external link and cannot be a relative link.
 
 Available events: """
     @_explicitize_args
