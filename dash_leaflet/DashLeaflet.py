@@ -22,7 +22,7 @@ Those keys have the following types:
   - maxZoom (number; optional)
   - zoom (number; optional)
 - baselayer (optional): The baselayer(s) of the map. Can either be a single one or an array of multiple baselayers including their name.
-     If no baselayer is provided, the OSM will serve as defualt.. baselayer has the following type: dict containing keys 'url', 'attribution'.
+     If no baselayer is provided, the OSM will serve as default.. baselayer has the following type: dict containing keys 'url', 'attribution'.
 Those keys have the following types: 
   - url (string; optional)
   - attribution (string; optional) | list
@@ -34,8 +34,8 @@ Those keys have the following types:
      - geom: GeoJSON object containing points that are to be rendered on the map.
      - title: Title of point layer that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the points.
-     - source: Source of the icon that is to be rendered for the points. Attention, this must be an
-     external link and cannot be a relative link.
+     - icon: Shape for the icon that is to be rendered for the points. Attention, the iconUrl must be an
+       external link and cannot be a relative link.
 
 Available events: """
     @_explicitize_args

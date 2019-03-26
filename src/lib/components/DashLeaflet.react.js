@@ -74,7 +74,7 @@ export default class DashLeaflet extends Component<{}, State> {
             let layerList = [];
             for (let j = 0; j < layers.length; j++) {
                 let line = (
-                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color="black" weight={2}
+                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={'black'} weight={2} opacity={1}
                                            positions={layers[j].getLatLngs()}>
                         <ReactLeaflet.Popup>
                             <div>
@@ -101,15 +101,28 @@ export default class DashLeaflet extends Component<{}, State> {
      *
      * @param source
      */
-    static getIcon(source) {
-        if (!source) {
-            return L.icon({iconUrl: 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon.png'})
+    static getIcon(options) {
+        if (!options) {
+            return L.icon({
+                iconUrl:       'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon.png',
+                iconRetinaUrl: 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon-2x.png',
+                shadowUrl:     'https://unpkg.com/leaflet@1.4.0/dist/images/marker-shadow.png',
+                iconSize:    [25, 41],
+                iconAnchor:  [12, 41],
+                popupAnchor: [1, -34],
+                tooltipAnchor: [16, -28],
+                shadowSize: [41, 41]
+            })
         }
         return L.icon({
-            iconUrl: source,
-            iconSize: [25, 25],
-            iconAnchor: [12.5, 12.5],
-            popupAnchor: [0, -12.5]
+            iconUrl: options.iconUrl,
+            iconRetinaUrl: (options.iconRetinaUrl) ? options.iconRetinaUrl : options.iconUrl,
+            shadowUrl: options.shadowUrl,
+            iconSize: (options.iconSize) ? options.iconSize : [25, 25],
+            iconAnchor: (options.iconAnchor) ? options.iconAnchor : [12.5, 12.5],
+            popupAnchor: (options.popupAnchor) ? options.popupAnchor : [0, -12.5],
+            tooltipAnchor: options.tooltipAnchor,
+            shadowSize: options.shadowSize
         });
     }
 
@@ -126,7 +139,7 @@ export default class DashLeaflet extends Component<{}, State> {
             for (let j = 0; j < layers.length; j++) {
                 let point = (
                     <ReactLeaflet.Marker key={"point" + i + "_" + j} position={layers[j].getLatLng()}
-                                         icon={DashLeaflet.getIcon(points[i].source)}>
+                                         icon={DashLeaflet.getIcon(points[i].icon)}>
                         <ReactLeaflet.Popup>
                             <div>
                                 {points[i].title}: <br/>{layers[j].feature.properties[points[i].popup]}
@@ -213,7 +226,7 @@ DashLeaflet.propTypes = {
 
     /**
      The baselayer(s) of the map. Can either be a single one or an array of multiple baselayers including their name.
-     If no baselayer is provided, the OSM will serve as defualt.
+     If no baselayer is provided, the OSM will serve as default.
      */
     baselayer: PropTypes.oneOfType([
         PropTypes.shape({
@@ -234,7 +247,7 @@ DashLeaflet.propTypes = {
      - popup: Property name that is to be rendered in the popup of the lines.
      */
     lines: PropTypes.arrayOf(PropTypes.shape({
-        geom: PropTypes.object,
+        geom: PropTypes.object.isRequired,
         titles: PropTypes.string,
         popup: PropTypes.string,
     })),
@@ -244,14 +257,24 @@ DashLeaflet.propTypes = {
      - geom: GeoJSON object containing points that are to be rendered on the map.
      - title: Title of point layer that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the points.
-     - source: Source of the icon that is to be rendered for the points. Attention, this must be an
-     external link and cannot be a relative link.
+     - icon: Shape for the icon that is to be rendered for the points. Attention, the iconUrl must be an
+       external link and cannot be a relative link.
      */
     points: PropTypes.arrayOf(PropTypes.shape({
-        geom: PropTypes.object,
+        geom: PropTypes.object.isRequired,
         title: PropTypes.string,
         popup: PropTypes.string,
         source: PropTypes.string,
+        icon: PropTypes.shape({
+            iconUrl: PropTypes.string,
+            iconRetinaUrl: PropTypes.string,
+            shadowUrl: PropTypes.string,
+            iconSize: PropTypes.arrayOf(PropTypes.number),
+            iconAnchor: PropTypes.arrayOf(PropTypes.number),
+            popupAnchor: PropTypes.arrayOf(PropTypes.number),
+            tooltipAnchor: PropTypes.arrayOf(PropTypes.number),
+            shadowSize: PropTypes.arrayOf(PropTypes.number)
+        })
     })),
 };
 
