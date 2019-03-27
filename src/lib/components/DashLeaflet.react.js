@@ -63,22 +63,26 @@ export default class DashLeaflet extends Component<{}, State> {
 
 
     /**
-     * Load lines from an array of objects containing geometry (as geojson), layer title, popup property and icon source.
+     * Load lines from an object containing title of line layer, array of geometries, array of popup content, color, weight and opacity.
      *
      * @returns {Array} of Layer overlays containing feature groups of provided lines
      */
     static loadLines(lines) {
         let line_layers = [];
         for (let i = 0; i < lines.length; i++) {
-            let layers = L.geoJSON(lines[i].geom).getLayers();
             let layerList = [];
-            for (let j = 0; j < layers.length; j++) {
+            for (let j = 0; j < lines[i].geom.length; j++) {
+                let popup = (Array.isArray(lines[i].popup)) ? lines[i].popup[j] : lines[i].popup;
+                let color = (lines[i].color) ? lines[i].color : 'black';
+                let weight = (lines[i].weight) ? lines[i].weight : 2;
+                let opacity = (lines[i].opacity) ? lines[i].opacity : 1;
+                console.log(color)
                 let line = (
-                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={'black'} weight={2} opacity={1}
-                                           positions={layers[j].getLatLngs()}>
+                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={color} weight={weight} opacity={opacity}
+                                           positions={lines[i].geom[j]}>
                         <ReactLeaflet.Popup>
                             <div>
-                                {lines[i].title}: <br/>{layers[j].feature.properties[lines[i].popup]}
+                                {popup}
                             </div>
                         </ReactLeaflet.Popup>
                     </ReactLeaflet.Polyline>);
@@ -104,11 +108,11 @@ export default class DashLeaflet extends Component<{}, State> {
     static getIcon(options) {
         if (!options) {
             return L.icon({
-                iconUrl:       'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon.png',
+                iconUrl: 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon.png',
                 iconRetinaUrl: 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-icon-2x.png',
-                shadowUrl:     'https://unpkg.com/leaflet@1.4.0/dist/images/marker-shadow.png',
-                iconSize:    [25, 41],
-                iconAnchor:  [12, 41],
+                shadowUrl: 'https://unpkg.com/leaflet@1.4.0/dist/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
                 popupAnchor: [1, -34],
                 tooltipAnchor: [16, -28],
                 shadowSize: [41, 41]
@@ -134,15 +138,15 @@ export default class DashLeaflet extends Component<{}, State> {
     static loadPoints(points) {
         let point_layers = [];
         for (let i = 0; i < points.length; i++) {
-            let layers = L.geoJSON(points[i].geom).getLayers();
             let layerList = [];
-            for (let j = 0; j < layers.length; j++) {
+            for (let j = 0; j < points[i].geom.length; j++) {
+                let popup = (Array.isArray(points[i].popup)) ? points[i].popup[j] : points[i].popup;
                 let point = (
-                    <ReactLeaflet.Marker key={"point" + i + "_" + j} position={layers[j].getLatLng()}
+                    <ReactLeaflet.Marker key={"point" + i + "_" + j} position={points[i].geom[j]}
                                          icon={DashLeaflet.getIcon(points[i].icon)}>
                         <ReactLeaflet.Popup>
                             <div>
-                                {points[i].title}: <br/>{layers[j].feature.properties[points[i].popup]}
+                                {popup}
                             </div>
                         </ReactLeaflet.Popup>
                     </ReactLeaflet.Marker>);
@@ -242,29 +246,44 @@ DashLeaflet.propTypes = {
 
     /**
      Array containing one or many shapes of:
-     - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
-     - title: Title of line layers that are to be rendered on the map.
-     - popup: Property name that is to be rendered in the popup of the lines.
+     - title: Title of line layer that is to be rendered on the map.
+     - geom: Array of arrays containing lines that are to be rendered on the map. These can either be lines or polylines.
+     - popup: String containing popup-text for this layer group or list of strings containing popup-texts,
+     - color: Color of the line on the map.
+     - weight: Weight of the lines.
+     - opacity: Opacity of the lines.
      */
     lines: PropTypes.arrayOf(PropTypes.shape({
-        geom: PropTypes.object.isRequired,
-        titles: PropTypes.string,
-        popup: PropTypes.string,
+        title: PropTypes.string,
+        geom: PropTypes.arrayOf(
+            PropTypes.oneOfType([
+                PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
+                PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)))
+            ])).isRequired,
+        popup: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.string),
+            PropTypes.string
+        ]),
+        color: PropTypes.string,
+        weight: PropTypes.number,
+        opacity: PropTypes.number
     })),
 
     /**
      Array containing one or many shapes of:
-     - geom: GeoJSON object containing points that are to be rendered on the map.
-     - title: Title of point layer that are to be rendered on the map.
-     - popup: Property name that is to be rendered in the popup of the points.
+     - title: Title of point layer that is to be rendered on the map.
+     - geom: Array of arrays containing coordinates ([lat, lng]) of points that are to be rendered on the map.
+     - popup: String containing popup-text for this layer group or list of strings containing popup-texts
      - icon: Shape for the icon that is to be rendered for the points. Attention, the iconUrl must be an
-       external link and cannot be a relative link.
+     external link and cannot be a relative link.
      */
     points: PropTypes.arrayOf(PropTypes.shape({
-        geom: PropTypes.object.isRequired,
         title: PropTypes.string,
-        popup: PropTypes.string,
-        source: PropTypes.string,
+        geom: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
+        popup: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.string),
+            PropTypes.string
+        ]),
         icon: PropTypes.shape({
             iconUrl: PropTypes.string,
             iconRetinaUrl: PropTypes.string,
@@ -276,6 +295,7 @@ DashLeaflet.propTypes = {
             shadowSize: PropTypes.arrayOf(PropTypes.number)
         })
     })),
+
 };
 
 DashLeaflet.defaultProps = {
@@ -285,5 +305,5 @@ DashLeaflet.defaultProps = {
         zoom: 4.
     },
     lines: [],
-    points: [],
+    points: []
 };

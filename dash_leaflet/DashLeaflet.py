@@ -30,22 +30,29 @@ Those keys have the following types:
      - geom: Array of GeoJSON objects containing lines that are to be rendered on the map.
      - title: Title of line layers that are to be rendered on the map.
      - popup: Property name that is to be rendered in the popup of the lines.
+- lines2 (list; optional): Array containing one or many shapes of:
+     - title: Title of line layer that is to be rendered on the map.
+     - geom: Array of arrays containing lines that are to be rendered on the map. These can either be lines or polylines.
+     - popup: Property name that is to be rendered in the popup of the lines.
+     - color: Color of the line on the map.
+     - weight: Weight of the lines.
+     - opacity: Opacity of the lines.
 - points (list; optional): Array containing one or many shapes of:
-     - geom: GeoJSON object containing points that are to be rendered on the map.
-     - title: Title of point layer that are to be rendered on the map.
-     - popup: Property name that is to be rendered in the popup of the points.
+     - title: Title of point layer that is to be rendered on the map.
+     - geom: Array of arrays containing coordinates ([lat, lng]) of points that are to be rendered on the map.
+     - popup: String containing popup-text for this layer group or list of strings containing popup-texts
      - icon: Shape for the icon that is to be rendered for the points. Attention, the iconUrl must be an
-       external link and cannot be a relative link.
+     external link and cannot be a relative link.
 
 Available events: """
     @_explicitize_args
-    def __init__(self, id=Component.UNDEFINED, style=Component.UNDEFINED, mapOptions=Component.UNDEFINED, baselayer=Component.UNDEFINED, lines=Component.UNDEFINED, points=Component.UNDEFINED, **kwargs):
-        self._prop_names = ['id', 'style', 'mapOptions', 'baselayer', 'lines', 'points']
+    def __init__(self, id=Component.UNDEFINED, style=Component.UNDEFINED, mapOptions=Component.UNDEFINED, baselayer=Component.UNDEFINED, lines=Component.UNDEFINED, lines2=Component.UNDEFINED, points=Component.UNDEFINED, **kwargs):
+        self._prop_names = ['id', 'style', 'mapOptions', 'baselayer', 'lines', 'lines2', 'points']
         self._type = 'DashLeaflet'
         self._namespace = 'dash_leaflet'
         self._valid_wildcard_attributes =            []
         self.available_events = []
-        self.available_properties = ['id', 'style', 'mapOptions', 'baselayer', 'lines', 'points']
+        self.available_properties = ['id', 'style', 'mapOptions', 'baselayer', 'lines', 'lines2', 'points']
         self.available_wildcard_properties =            []
 
         _explicit_args = kwargs.pop('_explicit_args')
