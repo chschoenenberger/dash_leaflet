@@ -26,17 +26,17 @@ export default class DashLeaflet extends Component<{}, State> {
      *
      * @returns {*} Single baselayer as TileLayer or multiple baselayers as TileLayers in LayersControl
      */
-    getBaseLayers() {
+    static loadBaseLayers(baselayers) {
         // If there is no baselayer, return OSM
-        if (!this.props.baselayer) {
+        if (!baselayers) {
             return (<ReactLeaflet.TileLayer
                 url={'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
                 attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
             />);
 
             // If there is a single baselayer provided, create Tilelayer and return it
-        } else if (!Array.isArray(this.props.baselayer) || this.props.baselayer.length === 1) {
-            let lyr = (this.props.baselayer.length === 1) ? this.props.baselayer[0] : this.props.baselayer;
+        } else if (!Array.isArray(baselayers) || baselayers.length === 1) {
+            let lyr = (baselayers.length === 1) ? baselayers[0] : baselayers;
             return (<ReactLeaflet.TileLayer
                 url={lyr.url}
                 attribution={lyr.attribution}
@@ -45,19 +45,19 @@ export default class DashLeaflet extends Component<{}, State> {
             // If there are multiple baselayers provided in an array, loop over them and return the baselayers in a layer
             // control element.
         } else {
-            let baselayers = [];
-            for (let i = 0; i < this.props.baselayer.length; i++) {
+            let layers = [];
+            for (let i = 0; i < baselayers.length; i++) {
                 let check = (i === 0) ? 'checked' : '';
                 let baselayer = (<ReactLeaflet.LayersControl.BaseLayer key={'baselayer_' + i} checked={check}
-                                                                       name={this.props.baselayer[i].name}>
+                                                                       name={baselayers[i].name}>
                     <ReactLeaflet.TileLayer
-                        url={this.props.baselayer[i].url}
-                        attribution={this.props.baselayer[i].attribution}
+                        url={baselayers[i].url}
+                        attribution={baselayers[i].attribution}
                     />
                 </ReactLeaflet.LayersControl.BaseLayer>);
-                baselayers.push(baselayer);
+                layers.push(baselayer);
             }
-            return baselayers;
+            return layers;
         }
     }
 
@@ -253,12 +253,12 @@ export default class DashLeaflet extends Component<{}, State> {
         if ((!this.props.baselayer || !Array.isArray(this.props.baselayer) || this.props.baselayer.length === 1) &&
             this.props.lines.length === 0 && this.props.markers.length === 0 && this.props.circleMarkers.length === 0) {
             layers = (
-                this.getBaseLayers()
+                DashLeaflet.loadBaseLayers(this.props.baselayer)
             )
         } else {
             layers = (
                 <ReactLeaflet.LayersControl>
-                    {this.getBaseLayers()}
+                    {DashLeaflet.loadBaseLayers(this.props.baselayer)}
                     {DashLeaflet.loadLines(this.props.lines)}
                     {DashLeaflet.loadMarkers(this.props.markers)}
                     {DashLeaflet.loadCircleMarkers(this.props.circleMarkers)}
