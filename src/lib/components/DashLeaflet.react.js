@@ -16,7 +16,7 @@ export default class DashLeaflet extends Component<{}, State> {
         }
         this.state = {
             line_layer: [],
-            point_layer: [],
+            marker_layer: [],
 
         };
     }
@@ -62,6 +62,39 @@ export default class DashLeaflet extends Component<{}, State> {
     }
 
 
+    static getOptions(options, type) {
+        options = (options != null) ? options : {};
+        let radius = (options.radius != null) ? options.radius: 10;
+        let stroke = (options.stroke != null) ? options.stroke : true;
+        let color = (options.color != null) ? options.color : 'black';
+        let weight = (options.weight != null) ? options.weight : 2;
+        let opacity = (options.opacity != null) ? options.opacity : 1;
+        let fill = (options.fill != null) ? options.fill : true;
+        let fillColor = (options.fillColor != null) ? options.fillColor : color;
+        let fillOpacity = (options.fillOpacity != null) ? options.fillOpacity : 0.2;
+
+        if (type === 'line') {
+            return {
+                color: color,
+                weight: weight,
+                opacity: opacity
+            }
+        }
+        if (type === 'circle') {
+            return {
+                radius: radius,
+                stroke: stroke,
+                color: color,
+                weight: weight,
+                opacity: opacity,
+                fill: fill,
+                fillColor: fillColor,
+                fillOpacity: fillOpacity
+            }
+        }
+    }
+
+
     /**
      * Load lines from an object containing title of line layer, array of geometries, array of popup content, color, weight and opacity.
      *
@@ -73,17 +106,13 @@ export default class DashLeaflet extends Component<{}, State> {
             let layerList = [];
             for (let j = 0; j < lines[i].geom.length; j++) {
                 let popup = (Array.isArray(lines[i].popup)) ? lines[i].popup[j] : lines[i].popup;
-                let color = (lines[i].color) ? lines[i].color : 'black';
-                let weight = (lines[i].weight) ? lines[i].weight : 2;
-                let opacity = (lines[i].opacity) ? lines[i].opacity : 1;
-                console.log(color)
+                let options = this.getOptions(lines[i].options, 'line');
                 let line = (
-                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={color} weight={weight} opacity={opacity}
+                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={options.color} weight={options.weight}
+                                           opacity={options.opacity}
                                            positions={lines[i].geom[j]}>
                         <ReactLeaflet.Popup>
-                            <div>
-                                {popup}
-                            </div>
+                            <div dangerouslySetInnerHTML={{__html: popup}}/>
                         </ReactLeaflet.Popup>
                     </ReactLeaflet.Polyline>);
                 layerList.push(line);
@@ -118,13 +147,31 @@ export default class DashLeaflet extends Component<{}, State> {
                 shadowSize: [41, 41]
             })
         }
+        if (options.iconSizeMultiplier) {
+            let icons = [];
+            for (let i = 0; i < options.iconSizeMultiplier.length; i++) {
+                let size = (options.iconSize) ? options.iconSize.map(x => x * options.iconSizeMultiplier[i]) : [25, 25].map(x => x * options.iconSizeMultiplier[i])
+                icons.push(L.icon({
+                    iconUrl: options.iconUrl,
+                    iconRetinaUrl: (options.iconRetinaUrl) ? options.iconRetinaUrl : options.iconUrl,
+                    shadowUrl: options.shadowUrl,
+                    iconSize: size,
+                    iconAnchor: (options.iconAnchor) ? options.iconAnchor : size.map(x => x / 2),
+                    popupAnchor: (options.popupAnchor) ? options.popupAnchor : [0, size[0] * -0.5],
+                    tooltipAnchor: options.tooltipAnchor,
+                    shadowSize: options.shadowSize
+                }))
+            }
+            return icons;
+        }
+        let size = [25, 25]
         return L.icon({
             iconUrl: options.iconUrl,
             iconRetinaUrl: (options.iconRetinaUrl) ? options.iconRetinaUrl : options.iconUrl,
             shadowUrl: options.shadowUrl,
             iconSize: (options.iconSize) ? options.iconSize : [25, 25],
-            iconAnchor: (options.iconAnchor) ? options.iconAnchor : [12.5, 12.5],
-            popupAnchor: (options.popupAnchor) ? options.popupAnchor : [0, -12.5],
+            iconAnchor: (options.iconAnchor) ? options.iconAnchor : size.map(x => x / 2),
+            popupAnchor: (options.popupAnchor) ? options.popupAnchor : [0, size[0] * -0.5],
             tooltipAnchor: options.tooltipAnchor,
             shadowSize: options.shadowSize
         });
@@ -135,41 +182,76 @@ export default class DashLeaflet extends Component<{}, State> {
      *
      * @returns {Array} of Layer overlays containing feature groups of provided points
      */
-    static loadPoints(points) {
-        let point_layers = [];
-        for (let i = 0; i < points.length; i++) {
+    static loadMarkers(markers) {
+        let marker_layers = [];
+        for (let i = 0; i < markers.length; i++) {
             let layerList = [];
-            for (let j = 0; j < points[i].geom.length; j++) {
-                let popup = (Array.isArray(points[i].popup)) ? points[i].popup[j] : points[i].popup;
-                let point = (
-                    <ReactLeaflet.Marker key={"point" + i + "_" + j} position={points[i].geom[j]}
-                                         icon={DashLeaflet.getIcon(points[i].icon)}>
+            for (let j = 0; j < markers[i].geom.length; j++) {
+                let popup = (Array.isArray(markers[i].popup)) ? markers[i].popup[j] : markers[i].popup;
+                let icon = (Array.isArray(DashLeaflet.getIcon(markers[i].icon))) ? DashLeaflet.getIcon(markers[i].icon)[j] : DashLeaflet.getIcon(markers[i].icon);
+                let marker = (
+                    <ReactLeaflet.Marker key={"marker" + i + "_" + j} position={markers[i].geom[j]}
+                                         icon={icon}>
                         <ReactLeaflet.Popup>
-                            <div>
-                                {popup}
-                            </div>
+                            <div dangerouslySetInnerHTML={{__html: popup}}/>
                         </ReactLeaflet.Popup>
                     </ReactLeaflet.Marker>);
-                layerList.push(point);
+                layerList.push(marker);
             }
-            let point_group = (
-                <ReactLeaflet.LayersControl.Overlay checked name={points[i].title} key={"point_layer" + i}>
+            let marker_group = (
+                <ReactLeaflet.LayersControl.Overlay checked name={markers[i].title} key={"marker_layer" + i}>
                     <ReactLeaflet.FeatureGroup>
                         {layerList}
                     </ReactLeaflet.FeatureGroup>
                 </ReactLeaflet.LayersControl.Overlay>);
-            point_layers.push(point_group);
+            marker_layers.push(marker_group);
         }
-        return point_layers
+        return marker_layers
+    }
+
+    /**
+     * Load points from an array of objects containing geometry (as geojson), layer title, popup property and icon source.
+     *
+     * @returns {Array} of Layer overlays containing feature groups of provided points
+     */
+    static loadCircleMarkers(circleMarkers) {
+        let circleMarker_layers = [];
+        for (let i = 0; i < circleMarkers.length; i++) {
+            let layerList = [];
+            for (let j = 0; j < circleMarkers[i].geom.length; j++) {
+                let popup = (Array.isArray(circleMarkers[i].popup)) ? circleMarkers[i].popup[j] : circleMarkers[i].popup;
+                let options = this.getOptions(circleMarkers[i].options, 'circle')
+                let radius = (Array.isArray(options.radius)) ? options.radius[j] : options.radius;
+                let circleMarker = (
+                    <ReactLeaflet.CircleMarker key={"circleMarker" + i + "_" + j} center={circleMarkers[i].geom[j]}
+                                               radius={radius} stroke={options.stroke} color={options.color}
+                                               weight={options.weight} opacity={options.opacity} fill={options.fill}
+                                               fillColor={options.fillColor} fillOpacity={options.fillOpacity}>
+                        <ReactLeaflet.Popup>
+                            <div dangerouslySetInnerHTML={{__html: popup}}/>
+                        </ReactLeaflet.Popup>
+                    </ReactLeaflet.CircleMarker>);
+                layerList.push(circleMarker);
+            }
+            let circleMarker_group = (
+                <ReactLeaflet.LayersControl.Overlay checked name={circleMarkers[i].title}
+                                                    key={"circleMarker_layer" + i}>
+                    <ReactLeaflet.FeatureGroup>
+                        {layerList}
+                    </ReactLeaflet.FeatureGroup>
+                </ReactLeaflet.LayersControl.Overlay>);
+            circleMarker_layers.push(circleMarker_group);
+        }
+        return circleMarker_layers
     }
 
     render() {
         let mapOptions = this.props.mapOptions;
 
         let layers;
-        // Only show layer control when there are point/line layers or multiple base layers
+        // Only show layer control when there are marker/line layers or multiple base layers
         if ((!this.props.baselayer || !Array.isArray(this.props.baselayer) || this.props.baselayer.length === 1) &&
-            this.props.lines.length === 0 && this.props.points.length === 0) {
+            this.props.lines.length === 0 && this.props.markers.length === 0 && this.props.circleMarkers.length === 0) {
             layers = (
                 this.getBaseLayers()
             )
@@ -178,7 +260,8 @@ export default class DashLeaflet extends Component<{}, State> {
                 <ReactLeaflet.LayersControl>
                     {this.getBaseLayers()}
                     {DashLeaflet.loadLines(this.props.lines)}
-                    {DashLeaflet.loadPoints(this.props.points)}
+                    {DashLeaflet.loadMarkers(this.props.markers)}
+                    {DashLeaflet.loadCircleMarkers(this.props.circleMarkers)}
                 </ReactLeaflet.LayersControl>
             )
         }
@@ -249,9 +332,10 @@ DashLeaflet.propTypes = {
      - title: Title of line layer that is to be rendered on the map.
      - geom: Array of arrays containing lines that are to be rendered on the map. These can either be lines or polylines.
      - popup: String containing popup-text for this layer group or list of strings containing popup-texts,
-     - color: Color of the line on the map.
-     - weight: Weight of the lines.
-     - opacity: Opacity of the lines.
+     - options: Shape containing element options:
+     - color: Stroke color
+     - weight: Stroke width in pixels
+     - opacity: Stroke opacity
      */
     lines: PropTypes.arrayOf(PropTypes.shape({
         title: PropTypes.string,
@@ -264,20 +348,22 @@ DashLeaflet.propTypes = {
             PropTypes.arrayOf(PropTypes.string),
             PropTypes.string
         ]),
-        color: PropTypes.string,
-        weight: PropTypes.number,
-        opacity: PropTypes.number
+        options: PropTypes.shape({
+            color: PropTypes.string,
+            weight: PropTypes.number,
+            opacity: PropTypes.number
+        })
     })),
 
     /**
      Array containing one or many shapes of:
-     - title: Title of point layer that is to be rendered on the map.
-     - geom: Array of arrays containing coordinates ([lat, lng]) of points that are to be rendered on the map.
+     - title: Title of marker layer that is to be rendered on the map.
+     - geom: Array of arrays containing coordinates ([lat, lng]) of markers that are to be rendered on the map.
      - popup: String containing popup-text for this layer group or list of strings containing popup-texts
-     - icon: Shape for the icon that is to be rendered for the points. Attention, the iconUrl must be an
+     - icon: Shape for the icon that is to be rendered for the markers. Attention, the iconUrl must be an
      external link and cannot be a relative link.
      */
-    points: PropTypes.arrayOf(PropTypes.shape({
+    markers: PropTypes.arrayOf(PropTypes.shape({
         title: PropTypes.string,
         geom: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
         popup: PropTypes.oneOfType([
@@ -289,10 +375,47 @@ DashLeaflet.propTypes = {
             iconRetinaUrl: PropTypes.string,
             shadowUrl: PropTypes.string,
             iconSize: PropTypes.arrayOf(PropTypes.number),
+            iconSizeMultiplier: PropTypes.arrayOf(PropTypes.number),
             iconAnchor: PropTypes.arrayOf(PropTypes.number),
             popupAnchor: PropTypes.arrayOf(PropTypes.number),
             tooltipAnchor: PropTypes.arrayOf(PropTypes.number),
             shadowSize: PropTypes.arrayOf(PropTypes.number)
+        })
+    })),
+
+    /**
+     Array containing one or many shapes of:
+     - title: Title of marker layer that is to be rendered on the map.
+     - geom: Array of arrays containing coordinates ([lat, lng]) of markers that are to be rendered on the map.
+     - popup: String containing popup-text for this layer group or list of strings containing popup-texts
+     - options: Shape containing element options:
+     - stroke: Whether to draw stroke along the circle. Set it to false to disable borders.
+     - color: Stroke color
+     - weight: Stroke width in pixels
+     - opacity: Stroke opacity
+     - fill: Whether to fill the path with color. Set it to false to disable filling.
+     - fillColor: Fill color. Defaults to color of stroke
+     - fillOpacity: Fill opacity
+     */
+    circleMarkers: PropTypes.arrayOf(PropTypes.shape({
+        title: PropTypes.string,
+        geom: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
+        popup: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.string),
+            PropTypes.string
+        ]),
+        radius: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.number),
+            PropTypes.number
+        ]),
+        options: PropTypes.shape({
+            stroke: PropTypes.bool,
+            color: PropTypes.string,
+            weight: PropTypes.number,
+            opacity: PropTypes.number,
+            fill: PropTypes.bool,
+            fillColor: PropTypes.string,
+            fillOpacity: PropTypes.number
         })
     })),
 
@@ -305,5 +428,6 @@ DashLeaflet.defaultProps = {
         zoom: 4.
     },
     lines: [],
-    points: []
+    markers: [],
+    circleMarkers: []
 };
