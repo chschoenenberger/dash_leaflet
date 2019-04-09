@@ -14,11 +14,6 @@ export default class DashLeaflet extends Component<{}, State> {
         if (this.props.style['height'] === '100%') {
             console.warn('Attention: Map might not display, if height of element and parent are 100%.')
         }
-        this.state = {
-            line_layer: [],
-            marker_layer: [],
-
-        };
     }
 
     /**
@@ -95,7 +90,7 @@ export default class DashLeaflet extends Component<{}, State> {
      */
     static loadLines(lines) {
         return lines.map((layer, index_i) => {
-            let options = DashLeaflet.getOptions(layer.options, 'line');
+            let options = this.getOptions(layer.options, 'line');
             let layerList = layer.geom.map((line, index_j) => (
                 <ReactLeaflet.Polyline key={"line" + index_i + "_" + index_j} color={options.color}
                                        weight={options.weight} opacity={options.opacity}
@@ -120,7 +115,7 @@ export default class DashLeaflet extends Component<{}, State> {
     /**
      * Return a leaflet icon element when provided with a source of an image.
      *
-     * @param source
+     * @param options
      */
     static getIcon(options) {
         if (!options) {
@@ -172,9 +167,10 @@ export default class DashLeaflet extends Component<{}, State> {
      */
     static loadMarkers(markers) {
         return markers.map((layer, index_i) => {
+            let icons = DashLeaflet.getIcon(layer.icon);
             let layerList = layer.geom.map((position, index_j) => (
                 <ReactLeaflet.Marker key={"marker" + index_i + "_" + index_j} position={position}
-                                     icon={(Array.isArray(layer.icon)) ? DashLeaflet.getIcon(layer.icon[index_j]) : DashLeaflet.getIcon(layer.icon)}>
+                                     icon={(Array.isArray(icons)) ? icons[index_j] : icons}>
                     <ReactLeaflet.Popup>
                         <div dangerouslySetInnerHTML={{__html: (Array.isArray(layer.popup)) ? layer.popup[index_j] : layer.popup}}/>
                     </ReactLeaflet.Popup>
@@ -198,7 +194,7 @@ export default class DashLeaflet extends Component<{}, State> {
      */
     static loadCircleMarkers(circleMarkers) {
         return circleMarkers.map((layer, index_i) => {
-            let options = DashLeaflet.getOptions(layer.options, 'circle')
+            let options = this.getOptions(layer.options, 'circle')
             let layerList = layer.geom.map((position, index_j) => (
                 <ReactLeaflet.CircleMarker key={"circleMarker" + index_i + "_" + index_j} center={position}
                                            radius={(Array.isArray(options.radius)) ? options.radius[index_j] : options.radius}
