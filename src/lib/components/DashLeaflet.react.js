@@ -27,44 +27,37 @@ export default class DashLeaflet extends Component<{}, State> {
      * @returns {*} Single baselayer as TileLayer or multiple baselayers as TileLayers in LayersControl
      */
     static loadBaseLayers(baselayers) {
-        // If there is no baselayer, return OSM
-        if (!baselayers) {
-            return (<ReactLeaflet.TileLayer
-                url={'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-                attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
-            />);
+        // If baselayers is a single  object containing url & attribution, return it as TileLayer
+        if (!Array.isArray(baselayers)) {
+            return (
+                <ReactLeaflet.TileLayer
+                    url={baselayers.url}
+                    attribution={baselayers.attribution}
+                />
+            )
+        }
 
-            // If there is a single baselayer provided, create Tilelayer and return it
-        } else if (!Array.isArray(baselayers) || baselayers.length === 1) {
-            let lyr = (baselayers.length === 1) ? baselayers[0] : baselayers;
-            return (<ReactLeaflet.TileLayer
-                url={lyr.url}
-                attribution={lyr.attribution}
-            />);
-
-            // If there are multiple baselayers provided in an array, loop over them and return the baselayers in a layer
-            // control element.
-        } else {
-            let layers = [];
-            for (let i = 0; i < baselayers.length; i++) {
-                let check = (i === 0) ? 'checked' : '';
-                let baselayer = (<ReactLeaflet.LayersControl.BaseLayer key={'baselayer_' + i} checked={check}
-                                                                       name={baselayers[i].name}>
-                    <ReactLeaflet.TileLayer
-                        url={baselayers[i].url}
-                        attribution={baselayers[i].attribution}
-                    />
-                </ReactLeaflet.LayersControl.BaseLayer>);
-                layers.push(baselayer);
-            }
-            return layers;
+        // If there are multiple baselayers provided in an array, return an array of the baselayers as TileLayers in a
+        // LayersControl element.
+        else {
+            return (
+                baselayers.map((baselayers, index) => (
+                    <ReactLeaflet.LayersControl.BaseLayer key={'baselayer_' + baselayers.name} checked={(index === 0)}
+                                                          name={baselayers.name}>
+                        <ReactLeaflet.TileLayer
+                            url={baselayers.url}
+                            attribution={baselayers.attribution}
+                        />
+                    </ReactLeaflet.LayersControl.BaseLayer>
+                ))
+            )
         }
     }
 
 
     static getOptions(options, type) {
         options = (options != null) ? options : {};
-        let radius = (options.radius != null) ? options.radius: 10;
+        let radius = (options.radius != null) ? options.radius : 10;
         let stroke = (options.stroke != null) ? options.stroke : true;
         let color = (options.color != null) ? options.color : 'black';
         let weight = (options.weight != null) ? options.weight : 2;
@@ -101,31 +94,26 @@ export default class DashLeaflet extends Component<{}, State> {
      * @returns {Array} of Layer overlays containing feature groups of provided lines
      */
     static loadLines(lines) {
-        let line_layers = [];
-        for (let i = 0; i < lines.length; i++) {
-            let layerList = [];
-            for (let j = 0; j < lines[i].geom.length; j++) {
-                let popup = (Array.isArray(lines[i].popup)) ? lines[i].popup[j] : lines[i].popup;
-                let options = this.getOptions(lines[i].options, 'line');
-                let line = (
-                    <ReactLeaflet.Polyline key={"line" + i + "_" + j} color={options.color} weight={options.weight}
-                                           opacity={options.opacity}
-                                           positions={lines[i].geom[j]}>
-                        <ReactLeaflet.Popup>
-                            <div dangerouslySetInnerHTML={{__html: popup}}/>
-                        </ReactLeaflet.Popup>
-                    </ReactLeaflet.Polyline>);
-                layerList.push(line);
-            }
-            let line_group = (
-                <ReactLeaflet.LayersControl.Overlay checked name={lines[i].title} key={"line_layer" + i}>
+        return lines.map((layer, index_i) => {
+            let options = DashLeaflet.getOptions(layer.options, 'line');
+            let layerList = layer.geom.map((line, index_j) => (
+                <ReactLeaflet.Polyline key={"line" + index_i + "_" + index_j} color={options.color}
+                                       weight={options.weight} opacity={options.opacity}
+                                       positions={line}>
+                    <ReactLeaflet.Popup>
+                        <div dangerouslySetInnerHTML={{__html: (Array.isArray(layer.popup)) ? layer.popup[index_j] : layer.popup}}/>
+                    </ReactLeaflet.Popup>
+                </ReactLeaflet.Polyline>
+            ));
+
+            return (
+                <ReactLeaflet.LayersControl.Overlay checked name={layer.title} key={"line_layer" + index_i}>
                     <ReactLeaflet.FeatureGroup>
                         {layerList}
                     </ReactLeaflet.FeatureGroup>
-                </ReactLeaflet.LayersControl.Overlay>);
-            line_layers.push(line_group);
-        }
-        return line_layers
+                </ReactLeaflet.LayersControl.Overlay>
+            );
+        });
     }
 
 
@@ -164,12 +152,12 @@ export default class DashLeaflet extends Component<{}, State> {
             }
             return icons;
         }
-        let size = [25, 25]
+        let size = [25, 25];
         return L.icon({
             iconUrl: options.iconUrl,
             iconRetinaUrl: (options.iconRetinaUrl) ? options.iconRetinaUrl : options.iconUrl,
             shadowUrl: options.shadowUrl,
-            iconSize: (options.iconSize) ? options.iconSize : [25, 25],
+            iconSize: (options.iconSize) ? options.iconSize : size,
             iconAnchor: (options.iconAnchor) ? options.iconAnchor : size.map(x => x / 2),
             popupAnchor: (options.popupAnchor) ? options.popupAnchor : [0, size[0] * -0.5],
             tooltipAnchor: options.tooltipAnchor,
@@ -183,30 +171,24 @@ export default class DashLeaflet extends Component<{}, State> {
      * @returns {Array} of Layer overlays containing feature groups of provided points
      */
     static loadMarkers(markers) {
-        let marker_layers = [];
-        for (let i = 0; i < markers.length; i++) {
-            let layerList = [];
-            for (let j = 0; j < markers[i].geom.length; j++) {
-                let popup = (Array.isArray(markers[i].popup)) ? markers[i].popup[j] : markers[i].popup;
-                let icon = (Array.isArray(DashLeaflet.getIcon(markers[i].icon))) ? DashLeaflet.getIcon(markers[i].icon)[j] : DashLeaflet.getIcon(markers[i].icon);
-                let marker = (
-                    <ReactLeaflet.Marker key={"marker" + i + "_" + j} position={markers[i].geom[j]}
-                                         icon={icon}>
-                        <ReactLeaflet.Popup>
-                            <div dangerouslySetInnerHTML={{__html: popup}}/>
-                        </ReactLeaflet.Popup>
-                    </ReactLeaflet.Marker>);
-                layerList.push(marker);
-            }
-            let marker_group = (
-                <ReactLeaflet.LayersControl.Overlay checked name={markers[i].title} key={"marker_layer" + i}>
+        return markers.map((layer, index_i) => {
+            let layerList = layer.geom.map((position, index_j) => (
+                <ReactLeaflet.Marker key={"marker" + index_i + "_" + index_j} position={position}
+                                     icon={(Array.isArray(layer.icon)) ? DashLeaflet.getIcon(layer.icon[index_j]) : DashLeaflet.getIcon(layer.icon)}>
+                    <ReactLeaflet.Popup>
+                        <div dangerouslySetInnerHTML={{__html: (Array.isArray(layer.popup)) ? layer.popup[index_j] : layer.popup}}/>
+                    </ReactLeaflet.Popup>
+                </ReactLeaflet.Marker>
+            ));
+
+            return (
+                <ReactLeaflet.LayersControl.Overlay checked name={layer.title} key={"marker_layer" + index_i}>
                     <ReactLeaflet.FeatureGroup>
                         {layerList}
                     </ReactLeaflet.FeatureGroup>
-                </ReactLeaflet.LayersControl.Overlay>);
-            marker_layers.push(marker_group);
-        }
-        return marker_layers
+                </ReactLeaflet.LayersControl.Overlay>
+            )
+        })
     }
 
     /**
@@ -215,34 +197,29 @@ export default class DashLeaflet extends Component<{}, State> {
      * @returns {Array} of Layer overlays containing feature groups of provided points
      */
     static loadCircleMarkers(circleMarkers) {
-        let circleMarker_layers = [];
-        for (let i = 0; i < circleMarkers.length; i++) {
-            let layerList = [];
-            for (let j = 0; j < circleMarkers[i].geom.length; j++) {
-                let popup = (Array.isArray(circleMarkers[i].popup)) ? circleMarkers[i].popup[j] : circleMarkers[i].popup;
-                let options = this.getOptions(circleMarkers[i].options, 'circle')
-                let radius = (Array.isArray(options.radius)) ? options.radius[j] : options.radius;
-                let circleMarker = (
-                    <ReactLeaflet.CircleMarker key={"circleMarker" + i + "_" + j} center={circleMarkers[i].geom[j]}
-                                               radius={radius} stroke={options.stroke} color={options.color}
-                                               weight={options.weight} opacity={options.opacity} fill={options.fill}
-                                               fillColor={options.fillColor} fillOpacity={options.fillOpacity}>
-                        <ReactLeaflet.Popup>
-                            <div dangerouslySetInnerHTML={{__html: popup}}/>
-                        </ReactLeaflet.Popup>
-                    </ReactLeaflet.CircleMarker>);
-                layerList.push(circleMarker);
-            }
-            let circleMarker_group = (
-                <ReactLeaflet.LayersControl.Overlay checked name={circleMarkers[i].title}
-                                                    key={"circleMarker_layer" + i}>
+        return circleMarkers.map((layer, index_i) => {
+            let options = DashLeaflet.getOptions(layer.options, 'circle')
+            let layerList = layer.geom.map((position, index_j) => (
+                <ReactLeaflet.CircleMarker key={"circleMarker" + index_i + "_" + index_j} center={position}
+                                           radius={(Array.isArray(options.radius)) ? options.radius[index_j] : options.radius}
+                                           stroke={options.stroke} color={options.color} weight={options.weight}
+                                           opacity={options.opacity} fill={options.fill} fillColor={options.fillColor}
+                                           fillOpacity={options.fillOpacity}>
+                    <ReactLeaflet.Popup>
+                        <div dangerouslySetInnerHTML={{__html: (Array.isArray(layer.popup)) ? layer.popup[index_j] : layer.popup}}/>
+                    </ReactLeaflet.Popup>
+                </ReactLeaflet.CircleMarker>
+            ));
+
+            return (
+                <ReactLeaflet.LayersControl.Overlay checked name={layer.title}
+                                                    key={"circleMarker_layer" + index_i}>
                     <ReactLeaflet.FeatureGroup>
                         {layerList}
                     </ReactLeaflet.FeatureGroup>
-                </ReactLeaflet.LayersControl.Overlay>);
-            circleMarker_layers.push(circleMarker_group);
-        }
-        return circleMarker_layers
+                </ReactLeaflet.LayersControl.Overlay>
+            )
+        })
     }
 
     render() {
@@ -426,6 +403,10 @@ DashLeaflet.defaultProps = {
     mapOptions: {
         center: [0, 0],
         zoom: 4.
+    },
+    baselayer: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     },
     lines: [],
     markers: [],
