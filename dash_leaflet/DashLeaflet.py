@@ -45,6 +45,7 @@ Those keys have the following types:
      - geom: Array of arrays containing coordinates ([lat, lng]) of markers that are to be rendered on the map.
      - popup: String containing popup-text for this layer group or list of strings containing popup-texts
      - options: Shape containing element options:
+     - radius: Single number or array of numbers indicating the radius of the circle markers
      - stroke: Whether to draw stroke along the circle. Set it to false to disable borders.
      - color: Stroke color
      - weight: Stroke width in pixels
